@@ -1,0 +1,105 @@
+<button
+  class="sidebar-backdrop"
+  [class.show]="open()"
+  type="button"
+  aria-label="Close navigation"
+  (click)="closeSidebar.emit()"
+></button>
+
+<aside class="sidebar" [class.show]="open()" [class.collapsed]="collapsed()">
+  <header class="sidebar-header">
+    <button
+      class="brand-button"
+      type="button"
+      aria-label="Toggle sidebar"
+      [attr.aria-expanded]="!collapsed()"
+      (click)="togglePanel.emit()"
+    >
+      B
+    </button>
+    <strong>Sidebar</strong>
+    <button
+      class="mobile-close d-lg-none"
+      type="button"
+      aria-label="Close navigation"
+      (click)="closeSidebar.emit()"
+    >
+      &times;
+    </button>
+  </header>
+
+  <nav class="sidebar-navigation" aria-label="Main navigation">
+    <a
+      routerLink="/"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      title="Home"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3z" />
+      </svg>
+      <span>Home</span>
+    </a>
+
+    <div class="navigation-group">
+      <button
+        class="navigation-toggle"
+        type="button"
+        title="Dashboard"
+        [attr.aria-expanded]="openSubmenu() === 'dashboard'"
+        (click)="toggleSubmenu('dashboard')"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 18a8 8 0 1 1 16 0M12 10v4l3 1M6 18h12" />
+        </svg>
+        <span>Dashboard</span>
+        <i class="chevron" aria-hidden="true"></i>
+      </button>
+      @if (openSubmenu() === 'dashboard') {
+        <div class="submenu">
+          <a routerLink="/" fragment="metrics">Analytics</a>
+          <a routerLink="/" fragment="activity">Activity</a>
+          <a routerLink="/">Reports</a>
+        </div>
+      }
+    </div>
+
+    <div class="navigation-group">
+      <button
+        class="navigation-toggle"
+        type="button"
+        title="Orders"
+        [attr.aria-expanded]="openSubmenu() === 'orders'"
+        (click)="toggleSubmenu('orders')"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 4h16v16H4zM4 10h16M10 4v16M15 4v16" />
+        </svg>
+        <span>Orders</span>
+        <i class="chevron" aria-hidden="true"></i>
+      </button>
+      @if (openSubmenu() === 'orders') {
+        <div class="submenu">
+          <a routerLink="/users" routerLinkActive="active">All orders</a>
+          <a routerLink="/users">Pending</a>
+          <a routerLink="/users">Completed</a>
+        </div>
+      }
+    </div>
+
+    <a routerLink="/users" title="Products">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />
+      </svg>
+      <span>Products</span>
+    </a>
+
+    <a routerLink="/settings" routerLinkActive="active" title="Customers">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="8" r="3.5" />
+        <path d="M5 20c.7-4 3-6 7-6s6.3 2 7 6" />
+      </svg>
+      <span>Customers</span>
+    </a>
+  </nav>
+</aside>

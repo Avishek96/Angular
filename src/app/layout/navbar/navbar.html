@@ -1,0 +1,60 @@
+<header class="app-header">
+  <div class="header-start">
+    <button
+      class="menu-button d-lg-none"
+      type="button"
+      aria-label="Open navigation"
+      [attr.aria-expanded]="sidebarOpen()"
+      (click)="toggleSidebar.emit()"
+    >
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    @if (sidebarCollapsed()) {
+      <button
+        class="menu-button d-none d-lg-grid"
+        type="button"
+        aria-label="Open sidebar"
+        (click)="toggleSidebarPanel.emit()"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    }
+
+    <a class="brand" routerLink="/" aria-label="OpsBoard dashboard">
+      <span class="brand-mark">O</span>
+      <span>
+        <strong>OpsBoard</strong>
+        <small>Operations workspace</small>
+      </span>
+    </a>
+  </div>
+
+  <div class="header-actions">
+    <div class="clock" aria-label="Current local time">
+      <small>Local time</small>
+      <time>{{
+        currentTime() ? (currentTime() | date: 'EEE, MMM d · h:mm:ss a') : 'Loading...'
+      }}</time>
+    </div>
+
+    <a class="users-link" routerLink="/users">Users</a>
+
+    @if (auth.currentUser(); as user) {
+      <div class="user-info">
+        <span class="avatar">{{ user.name | initials }}</span>
+        <span class="user-copy">
+          <strong>{{ user.name }}</strong>
+          <small>{{ user.role }}</small>
+        </span>
+      </div>
+
+      <button class="logout-button" type="button" (click)="logout()">Logout</button>
+    } @else {
+      <a class="login-link" routerLink="/auth">Login</a>
+    }
+  </div>
+</header>

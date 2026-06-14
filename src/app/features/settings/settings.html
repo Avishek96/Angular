@@ -1,0 +1,20 @@
+<header>
+  <p>Workspace</p>
+  <h1>Settings</h1>
+</header>
+
+<section>
+  <div>
+    <h2>Email notifications</h2>
+    <p>Receive operational and deployment updates.</p>
+  </div>
+  <button
+    class="btn"
+    [class.btn-primary]="notificationsEnabled()"
+    [class.btn-outline-secondary]="!notificationsEnabled()"
+    type="button"
+    (click)="notificationsEnabled.set(!notificationsEnabled())"
+  >
+    {{ notificationsEnabled() ? 'Enabled' : 'Disabled' }}
+  </button>
+</section>

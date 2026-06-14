@@ -1,0 +1,35 @@
+nav {
+  padding: 0.65rem clamp(1rem, 3vw, 2rem);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+ol {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+}
+
+li {
+  color: var(--color-muted);
+
+  &:not(:last-child)::after {
+    margin-left: 0.55rem;
+    color: #a6aebb;
+    content: '/';
+  }
+}
+
+a {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

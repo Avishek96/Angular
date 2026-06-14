@@ -1,0 +1,30 @@
+<section class="hero">
+  <div>
+    <p class="eyebrow">Friday, June 12</p>
+    <h1>Your systems are healthy.</h1>
+    <p class="intro">A focused overview of delivery, reliability, and active work.</p>
+  </div>
+  <a class="primary-action" routerLink="/users">Manage users</a>
+</section>
+
+<section id="metrics" aria-labelledby="metrics-heading">
+  <h2 id="metrics-heading">Last 30 days</h2>
+  <div class="metrics">
+    @for (metric of metrics; track metric.label) {
+      <article>
+        <span>{{ metric.label }}</span>
+        <strong>{{ metric.value }}</strong>
+        <small [class.negative]="!metric.positive">{{ metric.trend }}</small>
+      </article>
+    }
+  </div>
+</section>
+
+<section id="activity" class="activity" aria-labelledby="activity-heading">
+  <div>
+    <p class="eyebrow">Latest activity</p>
+    <h2 id="activity-heading">A quiet day is a good day.</h2>
+    <p>No critical alerts. The latest production deployment completed successfully.</p>
+  </div>
+  <span class="status">All operational</span>
+</section>

@@ -1,0 +1,30 @@
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+@if (auth.authenticated()) {
+  <app-sidebar
+    [open]="sidebarOpen()"
+    [collapsed]="sidebarCollapsed()"
+    (closeSidebar)="closeSidebar()"
+    (togglePanel)="toggleSidebarPanel()"
+  />
+
+  <div class="app-content" [class.sidebar-collapsed]="sidebarCollapsed()">
+    <app-navbar
+      [sidebarOpen]="sidebarOpen()"
+      [sidebarCollapsed]="sidebarCollapsed()"
+      (toggleSidebar)="toggleSidebar()"
+      (toggleSidebarPanel)="toggleSidebarPanel()"
+    />
+    <app-breadcrumb />
+
+    <main id="main-content">
+      <router-outlet />
+    </main>
+
+    <app-footer />
+  </div>
+} @else {
+  <main id="main-content" class="auth-content">
+    <router-outlet />
+  </main>
+}
