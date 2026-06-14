@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
@@ -7,13 +8,36 @@ import { AuthService } from './core/services/auth.service';
 import { App } from './app';
 
 describe('App', () => {
+  const authenticated = signal(false);
+  const currentUser = signal<{
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    active: boolean;
+  } | null>(null);
+
   beforeEach(async () => {
+    authenticated.set(false);
+    currentUser.set(null);
+
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
         provideRouter([]),
         provideHttpClient(),
         { provide: APP_CONFIG, useValue: environment },
+        {
+          provide: AuthService,
+          useValue: {
+            authenticated,
+            currentUser,
+            logout: () => {
+              authenticated.set(false);
+              currentUser.set(null);
+            },
+          },
+        },
       ],
     }).compileComponents();
   });
@@ -34,7 +58,14 @@ describe('App', () => {
 
   it('should render the application shell after login', async () => {
     const fixture = TestBed.createComponent(App);
-    TestBed.inject(AuthService).login();
+    authenticated.set(true);
+    currentUser.set({
+      id: 'test-user',
+      name: 'Avery Stone',
+      email: 'avery@example.com',
+      role: 'Administrator',
+      active: true,
+    });
     fixture.detectChanges();
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;

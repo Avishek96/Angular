@@ -53,9 +53,15 @@ The Angular app expects the following API endpoints:
 - `POST /api/auth/login`
 - `GET /api/products`
 
-Authentication responses must contain `accessToken`, `expiresAt`, and a `user` object with `id` and
-`email`. The auth interceptor automatically adds the bearer token to API requests. Configure or
-proxy `/api` to your external backend in each deployment environment.
+Authentication responses must contain an `accessToken` JWT. The token must include user ID (`sub`),
+`email`, and expiry (`exp`) claims; `name`, `role`, and `active` claims are optional. ASP.NET
+Identity claim URIs are also supported. The auth interceptor automatically adds the bearer token to
+API requests. Configure or proxy `/api` to your external backend in each deployment environment.
+
+During `npm start`, [`proxy.conf.json`](proxy.conf.json) forwards `/api` requests to
+`http://localhost:5000`. Change its `target` to the address of your API when needed. The production
+server deliberately returns a JSON `502` response for unconfigured `/api` routes instead of
+returning the Angular HTML page.
 
 ## 5. Validate every change
 

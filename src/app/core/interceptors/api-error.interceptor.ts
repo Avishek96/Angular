@@ -12,7 +12,11 @@ export const apiErrorInterceptor: HttpInterceptorFn = (request, next) =>
       const apiError: ApiError =
         error instanceof HttpErrorResponse
           ? {
-              message: error.error?.message ?? 'The request could not be completed.',
+              message:
+                error.error?.message ??
+                (error.status === 0
+                  ? 'The API server is unavailable.'
+                  : 'The request could not be completed.'),
               status: error.status,
             }
           : { message: 'An unexpected error occurred.', status: 0 };

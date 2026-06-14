@@ -5,9 +5,5 @@ export interface AuthRequest {
 
 export interface AuthResponse {
   readonly accessToken: string;
-  readonly expiresAt: string;
-  readonly user: {
-    readonly id: string;
-    readonly email: string;
-  };
+  readonly expiresAt?: string;
 }

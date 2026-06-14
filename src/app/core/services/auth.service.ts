@@ -7,7 +7,23 @@ import { AuthRequest, AuthResponse } from '../models/auth.model';
 import { User } from '../models/user.model';
 
 const TOKEN_KEY = 'opsboard.accessToken';
-const USER_KEY = 'opsboard.user';
+const CLAIMS = {
+  id: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier',
+  email: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress',
+  name: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name',
+  role: 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role',
+} as const;
+
+interface JwtClaims {
+  readonly sub?: string;
+  readonly email?: string;
+  readonly name?: string;
+  readonly unique_name?: string;
+  readonly role?: string | readonly string[];
+  readonly active?: boolean | string;
+  readonly exp?: number;
+  readonly [claim: string]: unknown;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -21,30 +37,20 @@ export class AuthService {
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
       const token = localStorage.getItem(TOKEN_KEY);
-      const user = localStorage.getItem(USER_KEY);
-      if (token && user && !this.isExpired(token)) {
-        this.authenticated.set(true);
-        this.currentUser.set(JSON.parse(user) as User);
-      } else {
-        this.clearSession();
+      if (token && !this.isExpired(token)) {
+        const user = this.userFromToken(token);
+        if (user) {
+          this.authenticated.set(true);
+          this.currentUser.set(user);
+          return;
+        }
       }
+
+      this.clearSession();
     }
   }
 
-  login(): void;
-  login(request: AuthRequest): Observable<AuthResponse>;
-  login(request?: AuthRequest): void | Observable<AuthResponse> {
-    if (!request) {
-      this.setSession('test-token', {
-        id: 'test-user',
-        name: 'Avery Stone',
-        email: 'avery@example.com',
-        role: 'Administrator',
-        active: true,
-      });
-      return;
-    }
-
+  login(request: AuthRequest): Observable<AuthResponse> {
     return this.authenticate('login', request);
   }
 
@@ -70,14 +76,65 @@ export class AuthService {
   }
 
   private setSessionFromResponse(response: AuthResponse): void {
-    const name = response.user.email.split('@')[0];
-    this.setSession(response.accessToken, {
-      id: response.user.id,
+    const user = this.userFromToken(response.accessToken);
+    if (!user) {
+      throw new Error('The access token does not contain valid user claims.');
+    }
+
+    this.setSession(response.accessToken, user);
+  }
+
+  private userFromToken(token: string): User | null {
+    const claims = this.decodeToken(token);
+    if (!claims) {
+      return null;
+    }
+
+    const id = this.claimString(claims, 'sub', CLAIMS.id);
+    const email = this.claimString(claims, 'email', CLAIMS.email);
+    if (!id || !email) {
+      return null;
+    }
+
+    const roleClaim = claims['role'] ?? claims[CLAIMS.role];
+    const role = Array.isArray(roleClaim) ? roleClaim[0] : roleClaim;
+    const name =
+      this.claimString(claims, 'name', 'unique_name', CLAIMS.name) ?? email.split('@')[0];
+
+    return {
+      id,
       name,
-      email: response.user.email,
-      role: 'User',
-      active: true,
-    });
+      email,
+      role: typeof role === 'string' ? role : 'User',
+      active: claims.active !== false && claims.active !== 'false',
+    };
+  }
+
+  private claimString(claims: JwtClaims, ...names: readonly string[]): string | null {
+    for (const name of names) {
+      const value = claims[name];
+      if (typeof value === 'string' && value.length > 0) {
+        return value;
+      }
+    }
+
+    return null;
+  }
+
+  private decodeToken(token: string): JwtClaims | null {
+    try {
+      const payload = token.split('.')[1];
+      if (!payload) {
+        return null;
+      }
+
+      const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+      const bytes = Uint8Array.from(atob(padded), (character) => character.charCodeAt(0));
+      return JSON.parse(new TextDecoder().decode(bytes)) as JwtClaims;
+    } catch {
+      return null;
+    }
   }
 
   private setSession(token: string, user: User): void {
@@ -85,7 +142,6 @@ export class AuthService {
     this.currentUser.set(user);
     if (isPlatformBrowser(this.platformId)) {
       localStorage.setItem(TOKEN_KEY, token);
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
     }
   }
 
@@ -94,16 +150,11 @@ export class AuthService {
     this.currentUser.set(null);
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(USER_KEY);
     }
   }
 
   private isExpired(token: string): boolean {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1])) as { exp?: number };
-      return !payload.exp || payload.exp * 1000 <= Date.now();
-    } catch {
-      return true;
-    }
+    const claims = this.decodeToken(token);
+    return !claims?.exp || claims.exp * 1000 <= Date.now();
   }
 }

@@ -21,6 +21,12 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+app.use('/api', (_req, res) => {
+  res.status(502).json({
+    message: 'API backend is not configured for this Angular server.',
+  });
+});
+
 /**
  * Serve static files from /browser
  */
