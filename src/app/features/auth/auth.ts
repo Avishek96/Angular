@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { finalize } from 'rxjs';
+import { ApiError } from '../../core/interceptors/api-error.interceptor';
 import { AuthService } from '../../core/services/auth.service';
 import { AutofocusDirective } from '../../shared/directives/autofocus.directive';
 
@@ -14,8 +16,29 @@ export class Auth {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  protected login(): void {
-    this.auth.login();
-    void this.router.navigateByUrl('/');
+  protected readonly email = signal('alice@example.com');
+  protected readonly password = signal('Password123!');
+  protected readonly registering = signal(true);
+  protected readonly loading = signal(false);
+  protected readonly error = signal('');
+
+  protected submit(): void {
+    this.loading.set(true);
+    this.error.set('');
+    const request = { email: this.email(), password: this.password() };
+    const operation = this.registering() ? this.auth.register(request) : this.auth.login(request);
+
+    operation.pipe(finalize(() => this.loading.set(false))).subscribe({
+      next: () => void this.router.navigateByUrl('/products'),
+      error: (error: ApiError) => this.error.set(error.message),
+    });
+  }
+
+  protected updateEmail(event: Event): void {
+    this.email.set((event.target as HTMLInputElement).value);
+  }
+
+  protected updatePassword(event: Event): void {
+    this.password.set((event.target as HTMLInputElement).value);
   }
 }

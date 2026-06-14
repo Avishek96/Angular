@@ -18,6 +18,13 @@ export const routes: Routes = [
       import('./features/dashboard/dashboard').then((module) => module.Dashboard),
   },
   {
+    path: 'products',
+    title: 'Products | OpsBoard',
+    data: { breadcrumb: 'Products' },
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/products/products').then((module) => module.Products),
+  },
+  {
     path: 'users',
     title: 'Users | OpsBoard',
     data: { breadcrumb: 'Users' },

@@ -47,8 +47,15 @@ The typed `APP_CONFIG` token lives in `src/app/core/models/app-config.model.ts`.
 provide its values, including the default `/api` base path. Add domain-specific API services inside
 their owning feature and inject `APP_CONFIG` rather than scattering URLs through components.
 
-The functional interceptor normalizes HTTP failures into `{ message, status }`. Extend the
-interceptor chain for authentication, correlation IDs, and telemetry.
+The Angular app expects the following API endpoints:
+
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/products`
+
+Authentication responses must contain `accessToken`, `expiresAt`, and a `user` object with `id` and
+`email`. The auth interceptor automatically adds the bearer token to API requests. Configure or
+proxy `/api` to your external backend in each deployment environment.
 
 ## 5. Validate every change
 

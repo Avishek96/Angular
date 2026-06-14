@@ -29,4 +29,24 @@ section {
     font-size: 0.8rem;
     font-weight: 700;
   }
+
+  form {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .error {
+    color: #b42318;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+
+  .mode-switch {
+    border: 0;
+    background: transparent;
+    color: var(--color-primary);
+    font-weight: 700;
+  }
 }

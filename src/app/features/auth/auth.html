@@ -1,13 +1,41 @@
 <section class="shadow-xl ring-1 ring-slate-200">
-  <p>Welcome back</p>
-  <h1>Sign in to OpsBoard</h1>
-  <label>
-    Email
-    <input appAutofocus class="form-control" type="email" value="admin@example.com" />
-  </label>
-  <label>
-    Password
-    <input class="form-control" type="password" value="password" />
-  </label>
-  <button class="btn btn-primary w-full" type="button" (click)="login()">Sign in</button>
+  <p>Identity microservice</p>
+  <h1>{{ registering() ? 'Create your account' : 'Sign in to OpsBoard' }}</h1>
+
+  <form (submit)="$event.preventDefault(); submit()">
+    <label>
+      Email
+      <input
+        appAutofocus
+        class="form-control"
+        type="email"
+        autocomplete="email"
+        required
+        [value]="email()"
+        (input)="updateEmail($event)"
+      />
+    </label>
+    <label>
+      Password
+      <input
+        class="form-control"
+        type="password"
+        autocomplete="current-password"
+        minlength="8"
+        required
+        [value]="password()"
+        (input)="updatePassword($event)"
+      />
+    </label>
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+    <button class="btn btn-primary w-full" type="submit" [disabled]="loading()">
+      {{ loading() ? 'Please wait...' : registering() ? 'Register' : 'Sign in' }}
+    </button>
+  </form>
+
+  <button class="mode-switch" type="button" (click)="registering.set(!registering())">
+    {{ registering() ? 'Already registered? Sign in' : 'Need an account? Register' }}
+  </button>
 </section>

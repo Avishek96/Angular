@@ -1,0 +1,21 @@
+<header>
+  <p>Protected microservice</p>
+  <h1>Products</h1>
+  <span>Your JWT is sent automatically when requesting protected product data.</span>
+</header>
+
+@if (loading()) {
+  <p>Loading products...</p>
+} @else if (error()) {
+  <p class="error" role="alert">{{ error() }}</p>
+} @else {
+  <div class="product-grid">
+    @for (product of products(); track product.id) {
+      <article>
+        <span>{{ product.price | currency }}</span>
+        <h2>{{ product.name }}</h2>
+        <p>{{ product.description }}</p>
+      </article>
+    }
+  </div>
+}
