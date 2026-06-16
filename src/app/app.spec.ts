@@ -70,7 +70,7 @@ describe('App', () => {
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.sidebar-navigation')?.textContent).toContain('Dashboard');
-    expect(compiled.querySelector('.sidebar-navigation')?.textContent).toContain('Orders');
+    expect(compiled.querySelector('.sidebar-navigation')?.textContent).toContain('Users');
     expect(compiled.querySelector('.brand-button')?.getAttribute('aria-expanded')).toBe('true');
     expect(compiled.querySelector('.navigation-toggle')?.getAttribute('aria-expanded')).toBe(
       'true',

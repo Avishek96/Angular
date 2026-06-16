@@ -41,7 +41,7 @@
       <span>Home</span>
     </a>
 
-    <div class="navigation-group">
+    <!-- <div class="navigation-group">
       <button
         class="navigation-toggle"
         type="button"
@@ -62,44 +62,17 @@
           <a routerLink="/">Reports</a>
         </div>
       }
-    </div>
+    </div> -->
 
-    <div class="navigation-group">
-      <button
-        class="navigation-toggle"
-        type="button"
-        title="Orders"
-        [attr.aria-expanded]="openSubmenu() === 'orders'"
-        (click)="toggleSubmenu('orders')"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 4h16v16H4zM4 10h16M10 4v16M15 4v16" />
-        </svg>
-        <span>Orders</span>
-        <i class="chevron" aria-hidden="true"></i>
-      </button>
-      @if (openSubmenu() === 'orders') {
-        <div class="submenu">
-          <a routerLink="/users" routerLinkActive="active">All orders</a>
-          <a routerLink="/users">Pending</a>
-          <a routerLink="/users">Completed</a>
-        </div>
-      }
-    </div>
-
-    <a routerLink="/products" routerLinkActive="active" title="Products">
+    <a routerLink="/users" routerLinkActive="active" title="Users">
       <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />
+        <circle cx="9" cy="8" r="3" />
+        <circle cx="17" cy="9" r="2.5" />
+        <path d="M3 20c.6-4 2.6-6 6-6s5.4 2 6 6M14 15c3.8-.5 6.2 1.2 7 5" />
       </svg>
-      <span>Products</span>
+      <span>Users</span>
     </a>
 
-    <a routerLink="/settings" routerLinkActive="active" title="Customers">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="12" cy="8" r="3.5" />
-        <path d="M5 20c.7-4 3-6 7-6s6.3 2 7 6" />
-      </svg>
-      <span>Customers</span>
-    </a>
+
   </nav>
 </aside>

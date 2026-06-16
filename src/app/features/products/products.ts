@@ -1,5 +1,5 @@
 import { CurrencyPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { ApiError } from '../../core/interceptors/api-error.interceptor';
 import { Product } from './product.model';
 import { ProductService } from './product.service';
@@ -11,13 +11,15 @@ import { ProductService } from './product.service';
   styleUrl: './products.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Products {
+export class Products implements OnInit {
+  private readonly productService = inject(ProductService);
+
   protected readonly products = signal<readonly Product[]>([]);
   protected readonly error = signal('');
   protected readonly loading = signal(true);
 
-  constructor() {
-    inject(ProductService)
+  ngOnInit(): void {
+    this.productService
       .getAll()
       .subscribe({
         next: (products) => {

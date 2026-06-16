@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Footer } from './layout/footer/footer';
 import { Navbar } from './layout/navbar/navbar';
 import { Sidebar } from './layout/sidebar/sidebar';
@@ -14,15 +15,23 @@ import { Breadcrumb } from './layout/breadcrumb/breadcrumb';
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class App {
+export class App implements OnInit {
   protected readonly auth = inject(AuthService);
   protected readonly sidebarOpen = signal(false);
   protected readonly sidebarCollapsed = signal(false);
 
-  constructor(router: Router) {
-    router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
-      this.sidebarOpen.set(false);
-    });
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+
+  ngOnInit(): void {
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        this.sidebarOpen.set(false);
+      });
   }
 
   protected toggleSidebar(): void {

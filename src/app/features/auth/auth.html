@@ -3,6 +3,30 @@
   <h1>{{ registering() ? 'Create your account' : 'Sign in to OpsBoard' }}</h1>
 
   <form (submit)="$event.preventDefault(); submit()">
+    @if (registering()) {
+      <label>
+        First name
+        <input
+          class="form-control"
+          type="text"
+          autocomplete="given-name"
+          required
+          [value]="firstName()"
+          (input)="updateFirstName($event)"
+        />
+      </label>
+      <label>
+        Last name
+        <input
+          class="form-control"
+          type="text"
+          autocomplete="family-name"
+          required
+          [value]="lastName()"
+          (input)="updateLastName($event)"
+        />
+      </label>
+    }
     <label>
       Email
       <input
@@ -20,7 +44,7 @@
       <input
         class="form-control"
         type="password"
-        autocomplete="current-password"
+        [attr.autocomplete]="registering() ? 'new-password' : 'current-password'"
         minlength="8"
         required
         [value]="password()"

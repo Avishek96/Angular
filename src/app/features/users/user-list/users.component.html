@@ -1,0 +1,90 @@
+<header>
+  <div>
+    <h2>Users</h2>
+  </div>
+  <label>
+    <span class="visually-hidden">Filter users</span>
+    <input
+      type="search"
+      placeholder="Filter users..."
+      [value]="query()"
+      (input)="updateQuery($event)"
+    />
+  </label>
+</header>
+
+@if (error()) {
+  <p class="error" role="alert">{{ error() }}</p>
+}
+
+@if (resettingUser(); as user) {
+  <form class="reset-panel" (submit)="$event.preventDefault(); resetPassword()">
+    <div>
+      <strong>Reset password for {{ fullName(user) }}</strong>
+      <span>Enter a temporary password with at least 8 characters.</span>
+    </div>
+    <input
+      type="password"
+      autocomplete="new-password"
+      minlength="8"
+      required
+      placeholder="New temporary password"
+      [value]="newPassword()"
+      (input)="updateNewPassword($event)"
+    />
+    <button class="primary" type="submit" [disabled]="actionUserId() === user.id">
+      Reset password
+    </button>
+    <button type="button" (click)="closeResetPassword()">Cancel</button>
+  </form>
+}
+
+@if (loading()) {
+  <p>Loading users...</p>
+} @else {
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th><span class="visually-hidden">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of filteredUsers(); track user.id) {
+          <tr>
+            <td>
+              <span class="avatar">{{ fullName(user) | initials }}</span>
+              {{ fullName(user) }}
+            </td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.roles.join(', ') || 'User' }}</td>
+            <td>
+              <span class="status" [class.inactive]="!user.active">
+                {{ user.active ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td class="actions">
+              <a [routerLink]="['/users', user.id, 'edit']">Edit</a>
+              <button type="button" (click)="openResetPassword(user)">Reset password</button>
+              <button
+                type="button"
+                [disabled]="actionUserId() === user.id"
+                (click)="toggleActive(user)"
+              >
+                {{ user.active ? 'Deactivate' : 'Activate' }}
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="empty">No users match your search.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

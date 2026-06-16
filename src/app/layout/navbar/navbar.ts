@@ -4,7 +4,9 @@ import {
   Component,
   DestroyRef,
   inject,
+  Injector,
   input,
+  OnInit,
   output,
   signal,
 } from '@angular/core';
@@ -20,7 +22,7 @@ import { InitialsPipe } from '../../shared/pipes/initials.pipe';
   styleUrl: './navbar.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Navbar {
+export class Navbar implements OnInit {
   readonly sidebarOpen = input(false);
   readonly sidebarCollapsed = input(false);
   readonly toggleSidebar = output<void>();
@@ -30,15 +32,15 @@ export class Navbar {
   protected readonly currentTime = signal<Date | null>(null);
 
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly injector = inject(Injector);
 
-  constructor() {
-    const destroyRef = inject(DestroyRef);
-
+  ngOnInit(): void {
     afterNextRender(() => {
       this.currentTime.set(new Date());
       const timer = window.setInterval(() => this.currentTime.set(new Date()), 1000);
-      destroyRef.onDestroy(() => window.clearInterval(timer));
-    });
+      this.destroyRef.onDestroy(() => window.clearInterval(timer));
+    }, { injector: this.injector });
   }
 
   protected logout(): void {

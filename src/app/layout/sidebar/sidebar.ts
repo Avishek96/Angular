@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
-type Submenu = 'dashboard' | 'orders';
+type Submenu = 'dashboard';
 
 @Component({
   selector: 'app-sidebar',

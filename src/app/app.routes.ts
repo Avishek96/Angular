@@ -1,42 +1,30 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './core/guards/auth.guard';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
     path: 'auth',
-    title: 'Sign in | OpsBoard',
-    data: { breadcrumb: 'Sign in' },
-    canActivate: [guestGuard],
-    loadComponent: () => import('./features/auth/auth').then((module) => module.Auth),
+    loadChildren: () => import('./features/auth/auth.routes').then((module) => module.authRoutes),
   },
   {
     path: '',
-    title: 'Dashboard | OpsBoard',
-    data: { breadcrumb: 'Dashboard' },
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/dashboard/dashboard').then((module) => module.Dashboard),
+    pathMatch: 'full',
+    loadChildren: () =>
+      import('./features/dashboard/dashboard.routes').then((module) => module.dashboardRoutes),
   },
   {
     path: 'products',
-    title: 'Products | OpsBoard',
-    data: { breadcrumb: 'Products' },
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/products/products').then((module) => module.Products),
+    loadChildren: () =>
+      import('./features/products/products.routes').then((module) => module.productsRoutes),
   },
   {
     path: 'users',
-    title: 'Users | OpsBoard',
-    data: { breadcrumb: 'Users' },
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/users/users').then((module) => module.Users),
+    loadChildren: () => import('./features/users/users.routes').then((module) => module.usersRoutes),
   },
   {
     path: 'settings',
-    title: 'Settings | OpsBoard',
-    data: { breadcrumb: 'Settings' },
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/settings/settings').then((module) => module.Settings),
+    loadChildren: () =>
+      import('./features/settings/settings.routes').then((module) => module.settingsRoutes),
   },
   {
     path: '**',

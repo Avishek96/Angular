@@ -52,6 +52,11 @@ The Angular app expects the following API endpoints:
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `GET /api/products`
+- `GET /api/users`
+- `GET /api/users/{id}`
+- `PUT /api/users/{id}`
+- `PUT /api/users/{id}/status`
+- `POST /api/users/{id}/reset-password`
 
 Authentication responses must contain an `accessToken` JWT. The token must include user ID (`sub`),
 `email`, and expiry (`exp`) claims; `name`, `role`, and `active` claims are optional. ASP.NET

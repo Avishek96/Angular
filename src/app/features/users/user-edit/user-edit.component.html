@@ -1,0 +1,53 @@
+<header>
+  <h2>Update user</h2>
+  <a routerLink="/users">Back to users</a>
+</header>
+
+@if (loading()) {
+  <p>Loading user...</p>
+} @else {
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <label>
+      First name
+      <input
+        type="text"
+        autocomplete="given-name"
+        formControlName="firstName"
+        required
+      />
+    </label>
+    <label>
+      Last name
+      <input
+        type="text"
+        autocomplete="family-name"
+        formControlName="lastName"
+        required
+      />
+    </label>
+    <label>
+      Email
+      <input
+        type="email"
+        autocomplete="email"
+        formControlName="email"
+        required
+      />
+    </label>
+    <label class="check">
+      <input type="checkbox" formControlName="active" />
+      Active user
+    </label>
+
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+
+    <div class="actions">
+      <button type="submit" [disabled]="saving() || form.invalid">
+        {{ saving() ? 'Saving...' : 'Save changes' }}
+      </button>
+      <a routerLink="/users">Cancel</a>
+    </div>
+  </form>
+}

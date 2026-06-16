@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { APP_CONFIG } from '../models/app-config.model';
-import { AuthRequest, AuthResponse } from '../models/auth.model';
+import { AuthRequest, AuthResponse, RegistrationRequest } from '../models/auth.model';
 import { User } from '../models/user.model';
 
 const TOKEN_KEY = 'opsboard.accessToken';
@@ -54,7 +54,7 @@ export class AuthService {
     return this.authenticate('login', request);
   }
 
-  register(request: AuthRequest): Observable<AuthResponse> {
+  register(request: RegistrationRequest): Observable<AuthResponse> {
     return this.authenticate('register', request);
   }
 
@@ -68,7 +68,7 @@ export class AuthService {
 
   private authenticate(
     action: 'login' | 'register',
-    request: AuthRequest,
+    request: AuthRequest | RegistrationRequest,
   ): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.config.apiUrl}/auth/${action}`, request)

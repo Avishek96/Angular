@@ -64,10 +64,23 @@ describe('AuthService', () => {
   });
 
   it('connects registration to the configured API', () => {
-    service.register({ email: 'alice@example.com', password: 'Password123!' }).subscribe();
+    service
+      .register({
+        firstName: 'Alice',
+        lastName: 'Smith',
+        email: 'alice@example.com',
+        password: 'Password123!',
+      })
+      .subscribe();
 
     const request = http.expectOne('/api/auth/register');
     expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      firstName: 'Alice',
+      lastName: 'Smith',
+      email: 'alice@example.com',
+      password: 'Password123!',
+    });
     request.flush({
       accessToken: token({
         sub: 'user-1',

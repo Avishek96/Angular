@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -10,20 +10,21 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   styleUrl: './breadcrumb.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Breadcrumb {
+export class Breadcrumb implements OnInit {
   protected readonly currentLabel = signal('Dashboard');
 
-  constructor() {
-    const router = inject(Router);
-    const activatedRoute = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly activatedRoute = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
-    router.events
+  ngOnInit(): void {
+    this.router.events
       .pipe(
         filter((event) => event instanceof NavigationEnd),
-        takeUntilDestroyed(),
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(() => {
-        let route = activatedRoute;
+        let route = this.activatedRoute;
         while (route.firstChild) {
           route = route.firstChild;
         }
