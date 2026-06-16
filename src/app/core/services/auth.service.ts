@@ -1,4 +1,4 @@
-import { isPlatformBrowser } from '@angular/common';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
@@ -29,6 +29,7 @@ interface JwtClaims {
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly config = inject(APP_CONFIG);
+  private readonly document = inject(DOCUMENT);
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly authenticated = signal(false);
@@ -36,7 +37,7 @@ export class AuthService {
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
-      const token = localStorage.getItem(TOKEN_KEY);
+      const token = this.readTokenCookie();
       if (token && !this.isExpired(token)) {
         const user = this.userFromToken(token);
         if (user) {
@@ -59,7 +60,7 @@ export class AuthService {
   }
 
   token(): string | null {
-    return isPlatformBrowser(this.platformId) ? localStorage.getItem(TOKEN_KEY) : null;
+    return isPlatformBrowser(this.platformId) ? this.readTokenCookie() : null;
   }
 
   logout(): void {
@@ -71,7 +72,7 @@ export class AuthService {
     request: AuthRequest | RegistrationRequest,
   ): Observable<AuthResponse> {
     return this.http
-      .post<AuthResponse>(`${this.config.apiUrl}/auth/${action}`, request)
+      .post<AuthResponse>(`${this.config.apiUrl}/auth/${action}`, request, { withCredentials: true })
       .pipe(tap((response) => this.setSessionFromResponse(response)));
   }
 
@@ -81,7 +82,7 @@ export class AuthService {
       throw new Error('The access token does not contain valid user claims.');
     }
 
-    this.setSession(response.accessToken, user);
+    this.setSession(response.accessToken, user, response.expiresAt);
   }
 
   private userFromToken(token: string): User | null {
@@ -137,11 +138,11 @@ export class AuthService {
     }
   }
 
-  private setSession(token: string, user: User): void {
+  private setSession(token: string, user: User, expiresAt?: string): void {
     this.authenticated.set(true);
     this.currentUser.set(user);
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem(TOKEN_KEY, token);
+      this.writeTokenCookie(token, expiresAt);
     }
   }
 
@@ -149,12 +150,48 @@ export class AuthService {
     this.authenticated.set(false);
     this.currentUser.set(null);
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem(TOKEN_KEY);
+      this.clearTokenCookie();
     }
   }
 
   private isExpired(token: string): boolean {
     const claims = this.decodeToken(token);
     return !claims?.exp || claims.exp * 1000 <= Date.now();
+  }
+
+  private readTokenCookie(): string | null {
+    const cookie = this.document.cookie
+      .split('; ')
+      .find((item) => item.startsWith(`${TOKEN_KEY}=`));
+
+    return cookie ? decodeURIComponent(cookie.slice(TOKEN_KEY.length + 1)) : null;
+  }
+
+  private writeTokenCookie(token: string, expiresAt?: string): void {
+    const attributes = [
+      `${TOKEN_KEY}=${encodeURIComponent(token)}`,
+      'Path=/',
+      'SameSite=Strict',
+      `Max-Age=${this.cookieMaxAge(token, expiresAt)}`,
+    ];
+
+    if (this.config.production) {
+      attributes.push('Secure');
+    }
+
+    this.document.cookie = attributes.join('; ');
+  }
+
+  private clearTokenCookie(): void {
+    this.document.cookie = `${TOKEN_KEY}=; Path=/; SameSite=Strict; Max-Age=0`;
+  }
+
+  private cookieMaxAge(token: string, expiresAt?: string): number {
+    const claims = this.decodeToken(token);
+    const expiresAtMs = expiresAt ? Date.parse(expiresAt) : Number.NaN;
+    const expiry = claims?.exp ? claims.exp * 1000 : expiresAtMs;
+    const maxAge = Math.floor((expiry - Date.now()) / 1000);
+
+    return Math.max(maxAge, 0);
   }
 }

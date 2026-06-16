@@ -8,11 +8,12 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const token = inject(AuthService).token();
 
   if (!token || !request.url.startsWith(config.apiUrl)) {
-    return next(request);
+    return next(request.clone({ withCredentials: request.url.startsWith(config.apiUrl) }));
   }
 
   return next(
     request.clone({
+      withCredentials: true,
       setHeaders: { Authorization: `Bearer ${token}` },
     }),
   );
