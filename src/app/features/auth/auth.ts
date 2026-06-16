@@ -20,7 +20,7 @@ export class Auth {
   protected readonly lastName = signal('');
   protected readonly email = signal('alice@example.com');
   protected readonly password = signal('Password123!');
-  protected readonly registering = signal(true);
+  protected readonly registering = signal(false);
   protected readonly loading = signal(false);
   protected readonly error = signal('');
 

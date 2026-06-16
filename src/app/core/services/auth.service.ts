@@ -1,55 +1,24 @@
-import { DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { catchError, map, Observable, of, switchMap, tap } from 'rxjs';
 import { APP_CONFIG } from '../models/app-config.model';
 import { AuthRequest, AuthResponse, RegistrationRequest } from '../models/auth.model';
 import { User } from '../models/user.model';
 
-const TOKEN_KEY = 'opsboard.accessToken';
-const CLAIMS = {
-  id: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier',
-  email: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress',
-  name: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name',
-  role: 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role',
-} as const;
-
-interface JwtClaims {
-  readonly sub?: string;
-  readonly email?: string;
-  readonly name?: string;
-  readonly unique_name?: string;
-  readonly role?: string | readonly string[];
-  readonly active?: boolean | string;
-  readonly exp?: number;
-  readonly [claim: string]: unknown;
+interface UserResponse {
+  readonly user?: User;
 }
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly config = inject(APP_CONFIG);
-  private readonly document = inject(DOCUMENT);
   private readonly platformId = inject(PLATFORM_ID);
+  private sessionChecked = false;
 
   readonly authenticated = signal(false);
   readonly currentUser = signal<User | null>(null);
-
-  constructor() {
-    if (isPlatformBrowser(this.platformId)) {
-      const token = this.readTokenCookie();
-      if (token && !this.isExpired(token)) {
-        const user = this.userFromToken(token);
-        if (user) {
-          this.authenticated.set(true);
-          this.currentUser.set(user);
-          return;
-        }
-      }
-
-      this.clearSession();
-    }
-  }
 
   login(request: AuthRequest): Observable<AuthResponse> {
     return this.authenticate('login', request);
@@ -59,12 +28,30 @@ export class AuthService {
     return this.authenticate('register', request);
   }
 
-  token(): string | null {
-    return isPlatformBrowser(this.platformId) ? this.readTokenCookie() : null;
+  ensureSession(): Observable<boolean> {
+    if (!isPlatformBrowser(this.platformId)) {
+      return of(true);
+    }
+
+    if (this.authenticated()) {
+      return of(true);
+    }
+
+    if (this.sessionChecked) {
+      return of(false);
+    }
+
+    return this.loadSession().pipe(map((user) => Boolean(user)));
   }
 
   logout(): void {
     this.clearSession();
+
+    if (isPlatformBrowser(this.platformId)) {
+      this.http
+        .post<void>(`${this.config.apiUrl}/auth/logout`, {}, { withCredentials: true })
+        .subscribe({ error: () => undefined });
+    }
   }
 
   private authenticate(
@@ -73,125 +60,48 @@ export class AuthService {
   ): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.config.apiUrl}/auth/${action}`, request, { withCredentials: true })
-      .pipe(tap((response) => this.setSessionFromResponse(response)));
+      .pipe(
+        tap((response) => {
+          if (response.user) {
+            this.setSession(response.user);
+          }
+        }),
+        switchMap((response) =>
+          response.user ? of(response) : this.loadSession().pipe(map(() => response)),
+        ),
+      );
   }
 
-  private setSessionFromResponse(response: AuthResponse): void {
-    const user = this.userFromToken(response.accessToken);
-    if (!user) {
-      throw new Error('The access token does not contain valid user claims.');
-    }
-
-    this.setSession(response.accessToken, user, response.expiresAt);
+  private loadSession(): Observable<User | null> {
+    return this.http
+      .get<User | UserResponse>(`${this.config.apiUrl}/auth/me`, { withCredentials: true })
+      .pipe(
+        map((response) => this.userResponse(response)),
+        tap((user) => {
+          this.sessionChecked = true;
+          this.setSession(user);
+        }),
+        catchError(() => {
+          this.sessionChecked = true;
+          this.clearSession();
+          return of(null);
+        }),
+      );
   }
 
-  private userFromToken(token: string): User | null {
-    const claims = this.decodeToken(token);
-    if (!claims) {
-      return null;
-    }
-
-    const id = this.claimString(claims, 'sub', CLAIMS.id);
-    const email = this.claimString(claims, 'email', CLAIMS.email);
-    if (!id || !email) {
-      return null;
-    }
-
-    const roleClaim = claims['role'] ?? claims[CLAIMS.role];
-    const role = Array.isArray(roleClaim) ? roleClaim[0] : roleClaim;
-    const name =
-      this.claimString(claims, 'name', 'unique_name', CLAIMS.name) ?? email.split('@')[0];
-
-    return {
-      id,
-      name,
-      email,
-      role: typeof role === 'string' ? role : 'User',
-      active: claims.active !== false && claims.active !== 'false',
-    };
+  private userResponse(response: User | UserResponse): User {
+    const wrapped = response as UserResponse;
+    return wrapped.user ?? (response as User);
   }
 
-  private claimString(claims: JwtClaims, ...names: readonly string[]): string | null {
-    for (const name of names) {
-      const value = claims[name];
-      if (typeof value === 'string' && value.length > 0) {
-        return value;
-      }
-    }
-
-    return null;
-  }
-
-  private decodeToken(token: string): JwtClaims | null {
-    try {
-      const payload = token.split('.')[1];
-      if (!payload) {
-        return null;
-      }
-
-      const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-      const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
-      const bytes = Uint8Array.from(atob(padded), (character) => character.charCodeAt(0));
-      return JSON.parse(new TextDecoder().decode(bytes)) as JwtClaims;
-    } catch {
-      return null;
-    }
-  }
-
-  private setSession(token: string, user: User, expiresAt?: string): void {
+  private setSession(user: User): void {
     this.authenticated.set(true);
     this.currentUser.set(user);
-    if (isPlatformBrowser(this.platformId)) {
-      this.writeTokenCookie(token, expiresAt);
-    }
+    this.sessionChecked = true;
   }
 
   private clearSession(): void {
     this.authenticated.set(false);
     this.currentUser.set(null);
-    if (isPlatformBrowser(this.platformId)) {
-      this.clearTokenCookie();
-    }
-  }
-
-  private isExpired(token: string): boolean {
-    const claims = this.decodeToken(token);
-    return !claims?.exp || claims.exp * 1000 <= Date.now();
-  }
-
-  private readTokenCookie(): string | null {
-    const cookie = this.document.cookie
-      .split('; ')
-      .find((item) => item.startsWith(`${TOKEN_KEY}=`));
-
-    return cookie ? decodeURIComponent(cookie.slice(TOKEN_KEY.length + 1)) : null;
-  }
-
-  private writeTokenCookie(token: string, expiresAt?: string): void {
-    const attributes = [
-      `${TOKEN_KEY}=${encodeURIComponent(token)}`,
-      'Path=/',
-      'SameSite=Strict',
-      `Max-Age=${this.cookieMaxAge(token, expiresAt)}`,
-    ];
-
-    if (this.config.production) {
-      attributes.push('Secure');
-    }
-
-    this.document.cookie = attributes.join('; ');
-  }
-
-  private clearTokenCookie(): void {
-    this.document.cookie = `${TOKEN_KEY}=; Path=/; SameSite=Strict; Max-Age=0`;
-  }
-
-  private cookieMaxAge(token: string, expiresAt?: string): number {
-    const claims = this.decodeToken(token);
-    const expiresAtMs = expiresAt ? Date.parse(expiresAt) : Number.NaN;
-    const expiry = claims?.exp ? claims.exp * 1000 : expiresAtMs;
-    const maxAge = Math.floor((expiry - Date.now()) / 1000);
-
-    return Math.max(maxAge, 0);
   }
 }
