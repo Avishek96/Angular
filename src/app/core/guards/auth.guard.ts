@@ -13,7 +13,13 @@ export const authGuard: CanActivateFn = () => {
   const router = inject(Router);
   return auth
     .ensureSession()
-    .pipe(map((authenticated) => authenticated || router.createUrlTree(['/auth'])));
+    .pipe(
+      map(
+        (authenticated) =>
+          authenticated ||
+          router.createUrlTree(['/auth'], { queryParams: { returnUrl: router.url } }),
+      ),
+    );
 };
 
 export const guestGuard: CanActivateFn = () => {

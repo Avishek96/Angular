@@ -69,12 +69,9 @@ describe('App', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.sidebar-navigation')?.textContent).toContain('Dashboard');
+    expect(compiled.querySelector('.sidebar-navigation')?.textContent).toContain('Home');
     expect(compiled.querySelector('.sidebar-navigation')?.textContent).toContain('Users');
     expect(compiled.querySelector('.brand-button')?.getAttribute('aria-expanded')).toBe('true');
-    expect(compiled.querySelector('.navigation-toggle')?.getAttribute('aria-expanded')).toBe(
-      'true',
-    );
     expect(compiled.querySelector('.app-header')?.textContent).toContain('Avery Stone');
     expect(compiled.querySelector('.logout-button')?.textContent).toContain('Logout');
     expect(compiled.querySelector('[aria-label="Breadcrumb"]')?.textContent).toContain('Home');

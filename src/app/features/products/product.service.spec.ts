@@ -4,13 +4,21 @@ import { TestBed } from '@angular/core/testing';
 import { APP_CONFIG } from '../../core/models/app-config.model';
 import { ProductService } from './product.service';
 
+const config = {
+  production: false,
+  apiUrl: '/api',
+  oidc: {
+    loginPath: '/auth/oidc/login',
+  },
+};
+
 describe('ProductService', () => {
   it('connects products to the configured API', () => {
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: APP_CONFIG, useValue: { production: false, apiUrl: '/api' } },
+        { provide: APP_CONFIG, useValue: config },
       ],
     });
 

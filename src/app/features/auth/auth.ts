@@ -1,60 +1,54 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
-import { ApiError } from '../../core/interceptors/api-error.interceptor';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { AutofocusDirective } from '../../shared/directives/autofocus.directive';
 
 @Component({
   selector: 'app-auth',
-  imports: [AutofocusDirective],
   templateUrl: './auth.html',
   styleUrl: './auth.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Auth {
+export class Auth implements OnInit {
   private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
-  protected readonly firstName = signal('');
-  protected readonly lastName = signal('');
-  protected readonly email = signal('alice@example.com');
-  protected readonly password = signal('Password123!');
-  protected readonly registering = signal(false);
   protected readonly loading = signal(false);
   protected readonly error = signal('');
 
-  protected submit(): void {
+  ngOnInit(): void {
+    const error = this.route.snapshot.queryParamMap.get('error');
+    if (error) {
+      this.error.set(this.errorMessage(error));
+      return;
+    }
+
+    this.signIn();
+  }
+
+  protected signIn(): void {
+    if (this.loading()) {
+      return;
+    }
+
     this.loading.set(true);
     this.error.set('');
-    const credentials = { email: this.email(), password: this.password() };
-    const operation = this.registering()
-      ? this.auth.register({
-          firstName: this.firstName(),
-          lastName: this.lastName(),
-          ...credentials,
-        })
-      : this.auth.login(credentials);
 
-    operation.pipe(finalize(() => this.loading.set(false))).subscribe({
-      next: () => void this.router.navigateByUrl('/products'),
-      error: (error: ApiError) => this.error.set(error.message),
-    });
+    try {
+      this.auth.login(this.route.snapshot.queryParamMap.get('returnUrl') ?? '/');
+    } catch {
+      this.error.set('The sign-in request could not be started.');
+      this.loading.set(false);
+    }
   }
 
-  protected updateFirstName(event: Event): void {
-    this.firstName.set((event.target as HTMLInputElement).value);
-  }
-
-  protected updateLastName(event: Event): void {
-    this.lastName.set((event.target as HTMLInputElement).value);
-  }
-
-  protected updateEmail(event: Event): void {
-    this.email.set((event.target as HTMLInputElement).value);
-  }
-
-  protected updatePassword(event: Event): void {
-    this.password.set((event.target as HTMLInputElement).value);
+  private errorMessage(error: string): string {
+    switch (error) {
+      case 'oidc_not_enabled':
+        return 'OpenID Connect is not enabled on the Identity API.';
+      case 'oidc_failed':
+        return 'OpenID Connect sign-in failed. Please try again.';
+      default:
+        return 'The sign-in request could not be completed.';
+    }
   }
 }

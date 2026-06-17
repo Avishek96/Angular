@@ -5,6 +5,14 @@ import { provideRouter } from '@angular/router';
 import { APP_CONFIG } from '../../../core/models/app-config.model';
 import { Users } from './users.component';
 
+const config = {
+  production: false,
+  apiUrl: '/api',
+  oidc: {
+    loginPath: '/auth/oidc/login',
+  },
+};
+
 describe('Users', () => {
   let fixture: ComponentFixture<Users>;
   let http: HttpTestingController;
@@ -16,7 +24,7 @@ describe('Users', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
-        { provide: APP_CONFIG, useValue: { production: false, apiUrl: '/api' } },
+        { provide: APP_CONFIG, useValue: config },
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(Users);

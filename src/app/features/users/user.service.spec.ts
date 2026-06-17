@@ -4,6 +4,14 @@ import { TestBed } from '@angular/core/testing';
 import { APP_CONFIG } from '../../core/models/app-config.model';
 import { UserService } from './user.service';
 
+const config = {
+  production: false,
+  apiUrl: '/api',
+  oidc: {
+    loginPath: '/auth/oidc/login',
+  },
+};
+
 describe('UserService', () => {
   let service: UserService;
   let http: HttpTestingController;
@@ -13,7 +21,7 @@ describe('UserService', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: APP_CONFIG, useValue: { production: false, apiUrl: '/api' } },
+        { provide: APP_CONFIG, useValue: config },
       ],
     });
 

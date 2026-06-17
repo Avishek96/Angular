@@ -4,13 +4,21 @@ import { TestBed } from '@angular/core/testing';
 import { APP_CONFIG } from '../models/app-config.model';
 import { authInterceptor } from './auth.interceptor';
 
+const config = {
+  production: false,
+  apiUrl: '/api',
+  oidc: {
+    loginPath: '/auth/oidc/login',
+  },
+};
+
 describe('authInterceptor', () => {
   it('sends credentials with configured API requests', () => {
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([authInterceptor])),
         provideHttpClientTesting(),
-        { provide: APP_CONFIG, useValue: { production: false, apiUrl: '/api' } },
+        { provide: APP_CONFIG, useValue: config },
       ],
     });
 

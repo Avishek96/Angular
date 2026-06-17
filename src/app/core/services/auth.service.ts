@@ -1,9 +1,8 @@
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
-import { catchError, map, Observable, of, switchMap, tap } from 'rxjs';
+import { catchError, map, Observable, of, tap } from 'rxjs';
 import { APP_CONFIG } from '../models/app-config.model';
-import { AuthRequest, AuthResponse, RegistrationRequest } from '../models/auth.model';
 import { User } from '../models/user.model';
 
 interface UserResponse {
@@ -20,12 +19,12 @@ export class AuthService {
   readonly authenticated = signal(false);
   readonly currentUser = signal<User | null>(null);
 
-  login(request: AuthRequest): Observable<AuthResponse> {
-    return this.authenticate('login', request);
-  }
+  login(returnUrl = '/'): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
 
-  register(request: RegistrationRequest): Observable<AuthResponse> {
-    return this.authenticate('register', request);
+    window.location.assign(this.oidcLoginUrl(returnUrl));
   }
 
   ensureSession(): Observable<boolean> {
@@ -54,22 +53,14 @@ export class AuthService {
     }
   }
 
-  private authenticate(
-    action: 'login' | 'register',
-    request: AuthRequest | RegistrationRequest,
-  ): Observable<AuthResponse> {
-    return this.http
-      .post<AuthResponse>(`${this.config.apiUrl}/auth/${action}`, request, { withCredentials: true })
-      .pipe(
-        tap((response) => {
-          if (response.user) {
-            this.setSession(response.user);
-          }
-        }),
-        switchMap((response) =>
-          response.user ? of(response) : this.loadSession().pipe(map(() => response)),
-        ),
-      );
+  private oidcLoginUrl(returnUrl: string): string {
+    const loginPath = this.config.oidc.loginPath.startsWith('/')
+      ? this.config.oidc.loginPath
+      : `/${this.config.oidc.loginPath}`;
+    const endpoint = `${this.config.apiUrl.replace(/\/$/, '')}${loginPath}`;
+    const url = new URL(endpoint, window.location.origin);
+    url.searchParams.set('returnUrl', this.sameOriginReturnUrl(returnUrl));
+    return url.toString();
   }
 
   private loadSession(): Observable<User | null> {
@@ -103,5 +94,14 @@ export class AuthService {
   private clearSession(): void {
     this.authenticated.set(false);
     this.currentUser.set(null);
+  }
+
+  private sameOriginReturnUrl(returnUrl: string): string {
+    try {
+      const url = new URL(returnUrl, window.location.origin);
+      return url.origin === window.location.origin ? url.toString() : window.location.origin;
+    } catch {
+      return window.location.origin;
+    }
   }
 }

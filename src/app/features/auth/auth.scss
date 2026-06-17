@@ -43,6 +43,14 @@ section {
     text-transform: none;
   }
 
+  .status {
+    color: var(--color-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+
   .mode-switch {
     border: 0;
     background: transparent;

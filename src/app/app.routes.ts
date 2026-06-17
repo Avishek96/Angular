@@ -7,6 +7,10 @@ export const routes: Routes = [
     loadChildren: () => import('./features/auth/auth.routes').then((module) => module.authRoutes),
   },
   {
+    path: 'login',
+    loadChildren: () => import('./features/auth/auth.routes').then((module) => module.authRoutes),
+  },
+  {
     path: '',
     pathMatch: 'full',
     loadChildren: () =>
