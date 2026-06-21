@@ -1,12 +1,36 @@
-<!-- <section class="shadow-xl ring-1 ring-slate-200">
-  <p>OpenID Connect</p>
-  <h1>Sign in to OpsBoard</h1>
+<section class="auth-card card card-outline card-primary">
+  <div class="card-header">
+    <h1 class="card-title">Sign in</h1>
+  </div>
 
-  @if (error()) {
-    <p class="error" role="alert">{{ error() }}</p>
-  }
+  <form class="form-horizontal" (submit)="$event.preventDefault(); signIn()">
+    <div class="card-body">
+      <div class="row mb-3">
+        <label class="col-sm-3 col-form-label" for="authProvider">Provider</label>
+        <div class="col-sm-9">
+          <input
+            class="form-control"
+            id="authProvider"
+            type="text"
+            value="OpenID Connect"
+            readonly
+          />
+        </div>
+      </div>
 
-  <button class="btn btn-primary w-full" type="button" [disabled]="loading()" (click)="signIn()">
-    {{ loading() ? 'Redirecting...' : 'Sign in with OpenID Connect' }}
-  </button>
-</section> -->
+      @if (error()) {
+        <div class="row mb-3">
+          <div class="offset-sm-3 col-sm-9">
+            <p class="error" role="alert">{{ error() }}</p>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="card-footer">
+      <button class="btn btn-primary" type="submit" [disabled]="loading()">
+        {{ loading() ? 'Redirecting...' : 'Sign in' }}
+      </button>
+    </div>
+  </form>
+</section>

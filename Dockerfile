@@ -1,20 +1,20 @@
-FROM node:24-alpine AS build
+FROM node:20-alpine AS build
+
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 COPY . .
 RUN npm run build
 
-FROM node:24-alpine AS runtime
-ENV NODE_ENV=production
-WORKDIR /app
+FROM nginx:alpine
 
-COPY --from=build /app/dist/production-app ./dist/production-app
-COPY --from=build /app/package*.json ./
-RUN npm ci --omit=dev
+COPY --from=build /app/dist/production-app/browser/ /usr/share/nginx/html/
+RUN mv /usr/share/nginx/html/index.csr.html /usr/share/nginx/html/index.html
 
-USER node
-EXPOSE 4000
-CMD ["node", "dist/production-app/server/server.mjs"]
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

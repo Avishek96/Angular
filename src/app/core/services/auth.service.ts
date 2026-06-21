@@ -2,12 +2,23 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import { catchError, map, Observable, of, tap } from 'rxjs';
+import { API_LIST, apiUrl } from '../models/api-list.model';
 import { APP_CONFIG } from '../models/app-config.model';
 import { User } from '../models/user.model';
 
 interface UserResponse {
   readonly user?: User;
 }
+
+interface PkceLoginState {
+  readonly codeVerifier: string;
+  readonly nonce: string;
+  readonly returnUrl: string;
+  readonly state: string;
+  readonly createdAt: number;
+}
+
+const PKCE_STORAGE_KEY = 'opsboard.oidc.pkce';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -19,12 +30,12 @@ export class AuthService {
   readonly authenticated = signal(false);
   readonly currentUser = signal<User | null>(null);
 
-  login(returnUrl = '/'): void {
+  async login(returnUrl = '/'): Promise<void> {
     if (!isPlatformBrowser(this.platformId)) {
       return;
     }
 
-    window.location.assign(this.oidcLoginUrl(returnUrl));
+    window.location.assign(await this.oidcLoginUrl(returnUrl));
   }
 
   ensureSession(): Observable<boolean> {
@@ -48,24 +59,39 @@ export class AuthService {
 
     if (isPlatformBrowser(this.platformId)) {
       this.http
-        .post<void>(`${this.config.apiUrl}/auth/logout`, {}, { withCredentials: true })
+        .post<void>(apiUrl(this.config.apiUrl, API_LIST.auth.logout), {}, { withCredentials: true })
         .subscribe({ error: () => undefined });
     }
   }
 
-  private oidcLoginUrl(returnUrl: string): string {
+  private async oidcLoginUrl(returnUrl: string): Promise<string> {
     const loginPath = this.config.oidc.loginPath.startsWith('/')
       ? this.config.oidc.loginPath
       : `/${this.config.oidc.loginPath}`;
-    const endpoint = `${this.config.apiUrl.replace(/\/$/, '')}${loginPath}`;
+    const loginBaseUrl = this.config.oidc.loginBaseUrl ?? this.config.apiUrl;
+    const endpoint = apiUrl(loginBaseUrl, loginPath);
     const url = new URL(endpoint, window.location.origin);
-    url.searchParams.set('returnUrl', this.sameOriginReturnUrl(returnUrl));
+    const safeReturnUrl = this.sameOriginReturnUrl(returnUrl);
+    url.searchParams.set('returnUrl', safeReturnUrl);
+
+    if (this.config.oidc.pkce !== false) {
+      const pkce = await this.createPkceLoginState(safeReturnUrl);
+      sessionStorage.setItem(PKCE_STORAGE_KEY, JSON.stringify(pkce));
+      url.searchParams.set('code_challenge', await this.sha256Base64Url(pkce.codeVerifier));
+      url.searchParams.set('code_challenge_method', 'S256');
+      url.searchParams.set('code_verifier', pkce.codeVerifier);
+      url.searchParams.set('nonce', pkce.nonce);
+      url.searchParams.set('state', pkce.state);
+    }
+
     return url.toString();
   }
 
   private loadSession(): Observable<User | null> {
     return this.http
-      .get<User | UserResponse>(`${this.config.apiUrl}/auth/me`, { withCredentials: true })
+      .get<User | UserResponse>(apiUrl(this.config.apiUrl, API_LIST.auth.me), {
+        withCredentials: true,
+      })
       .pipe(
         map((response) => this.userResponse(response)),
         tap((user) => {
@@ -103,5 +129,35 @@ export class AuthService {
     } catch {
       return window.location.origin;
     }
+  }
+
+  private async createPkceLoginState(returnUrl: string): Promise<PkceLoginState> {
+    return {
+      codeVerifier: this.randomBase64Url(64),
+      nonce: this.randomBase64Url(32),
+      returnUrl,
+      state: this.randomBase64Url(32),
+      createdAt: Date.now(),
+    };
+  }
+
+  private randomBase64Url(byteLength: number): string {
+    const bytes = new Uint8Array(byteLength);
+    crypto.getRandomValues(bytes);
+    return this.base64Url(bytes);
+  }
+
+  private async sha256Base64Url(value: string): Promise<string> {
+    const bytes = new TextEncoder().encode(value);
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    return this.base64Url(new Uint8Array(digest));
+  }
+
+  private base64Url(bytes: Uint8Array): string {
+    let binary = '';
+    bytes.forEach((byte) => {
+      binary += String.fromCharCode(byte);
+    });
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
 }

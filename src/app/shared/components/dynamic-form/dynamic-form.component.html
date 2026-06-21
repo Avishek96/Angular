@@ -1,0 +1,165 @@
+<form
+  class="card card-outline card-primary form-horizontal max-w-[46rem] rounded-2 border shadow-sm"
+  [formGroup]="form"
+  (ngSubmit)="submit()"
+>
+  <div class="card-header border-bottom bg-white" *ngIf="title">
+    <h3 class="card-title m-0 text-[1.05rem] fw-bold">{{ title }}</h3>
+  </div>
+
+  <div class="card-body">
+    <div class="row mb-3" *ngFor="let field of config.fields">
+      <label class="col-sm-3 col-form-label fw-bold" [for]="field.name">
+        {{ field.label }}
+      </label>
+
+      <div class="col-sm-9">
+        <input
+          *ngIf="field.controlType === 'text'"
+          class="form-control"
+          [id]="field.name"
+          type="text"
+          [formControlName]="field.name"
+        />
+
+        <input
+          *ngIf="field.controlType === 'number'"
+          class="form-control"
+          [id]="field.name"
+          type="number"
+          [formControlName]="field.name"
+        />
+
+        <input
+          *ngIf="
+            field.controlType === 'email' ||
+            field.controlType === 'date' ||
+            field.controlType === 'datetime'
+          "
+          class="form-control"
+          [id]="field.name"
+          [type]="field.controlType === 'datetime' ? 'datetime-local' : field.controlType"
+          [formControlName]="field.name"
+        />
+
+        <div *ngIf="field.controlType === 'datetime-range'" class="row g-3">
+          <div class="col-12 col-md-6">
+            <label class="form-label small fw-bold text-secondary mb-1" [for]="field.name + '-start'">
+              Start
+            </label>
+            <input
+              class="form-control"
+              [id]="field.name + '-start'"
+              type="datetime-local"
+              [value]="dateTimeRangeValue(field.name, 'start')"
+              (input)="updateDateTimeRange(field.name, 'start', $any($event.target).value)"
+            />
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label class="form-label small fw-bold text-secondary mb-1" [for]="field.name + '-end'">
+              End
+            </label>
+            <input
+              class="form-control"
+              [id]="field.name + '-end'"
+              type="datetime-local"
+              [value]="dateTimeRangeValue(field.name, 'end')"
+              (input)="updateDateTimeRange(field.name, 'end', $any($event.target).value)"
+            />
+          </div>
+        </div>
+
+        <select
+          *ngIf="field.controlType === 'select'"
+          class="form-select"
+          [id]="field.name"
+          [formControlName]="field.name"
+        >
+          <option value="">Select {{ field.label }}</option>
+
+          <option *ngFor="let option of field.options" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+
+        <div *ngIf="field.controlType === 'checkbox'" class="form-check">
+          <input
+            class="form-check-input"
+            [id]="field.name"
+            type="checkbox"
+            [formControlName]="field.name"
+          />
+          <label class="form-check-label" [for]="field.name">Yes</label>
+        </div>
+
+        <div *ngIf="field.controlType === 'radio'" class="d-grid gap-2 pt-1">
+          <div class="form-check" *ngFor="let option of field.options">
+            <input
+              class="form-check-input"
+              [id]="field.name + '-' + option.value"
+              type="radio"
+              [value]="option.value"
+              [formControlName]="field.name"
+            />
+            <label class="form-check-label" [for]="field.name + '-' + option.value">
+              {{ option.label }}
+            </label>
+          </div>
+        </div>
+
+        <div *ngIf="field.controlType === 'checkbox-group'" class="d-grid gap-2 pt-1">
+          <div class="form-check" *ngFor="let option of field.options">
+            <input
+              class="form-check-input"
+              [id]="field.name + '-' + option.value"
+              type="checkbox"
+              [checked]="isCheckboxGroupSelected(field.name, option.value)"
+              (change)="toggleCheckboxGroup(field.name, option.value, $any($event.target).checked)"
+            />
+            <label class="form-check-label" [for]="field.name + '-' + option.value">
+              {{ option.label }}
+            </label>
+          </div>
+        </div>
+
+        <div *ngIf="field.controlType === 'radio-group'" class="d-grid gap-2 pt-1">
+          <div class="form-check" *ngFor="let option of field.options">
+            <input
+              class="form-check-input"
+              [id]="field.name + '-' + option.value"
+              type="radio"
+              [value]="option.value"
+              [formControlName]="field.name"
+            />
+            <label class="form-check-label" [for]="field.name + '-' + option.value">
+              {{ option.label }}
+            </label>
+          </div>
+        </div>
+
+        <div
+          class="invalid-feedback d-block mt-1 text-danger fw-bold"
+          *ngIf="form.get(field.name)?.invalid && form.get(field.name)?.touched"
+        >
+          Invalid {{ field.label }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="card-footer d-flex flex-column flex-sm-row gap-2 justify-content-sm-end border-top bg-light"
+    *ngIf="visibleActions.length"
+  >
+    <button
+      *ngFor="let action of visibleActions"
+      [class]="actionClass(action)"
+      [disabled]="isActionDisabled(action)"
+      [type]="action.type ?? 'button'"
+      (click)="runAction(action)"
+    >
+      {{ actionLabel(action) }}
+    </button>
+  </div>
+</form>

@@ -3,7 +3,7 @@
   align-items: end;
   justify-content: space-between;
   gap: 2rem;
-  margin-bottom: 4rem;
+  margin-bottom: 2rem;
 }
 
 h1 {
@@ -38,6 +38,41 @@ h1 {
   color: white;
   font-weight: 700;
   text-decoration: none;
+}
+
+.employee-list {
+  max-width: 54rem;
+  margin-bottom: 1.5rem;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+}
+
+.table {
+  margin-bottom: 0;
+  border: 1px solid var(--color-border);
+
+  th {
+    color: var(--color-muted);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+  }
+
+  td,
+  th {
+    padding: 0.8rem 0.9rem;
+  }
 }
 
 h2 {
@@ -126,4 +161,5 @@ h2 {
   .metrics {
     grid-template-columns: 1fr;
   }
+
 }

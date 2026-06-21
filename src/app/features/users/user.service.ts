@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
+import { API_LIST, apiUrl } from '../../core/models/api-list.model';
 import { APP_CONFIG } from '../../core/models/app-config.model';
 import { ManagedUser, ResetPasswordRequest, UpdateUserRequest } from './user.model';
 
@@ -33,30 +34,35 @@ interface ApiUserResponse {
 export class UserService {
   private readonly http = inject(HttpClient);
   private readonly config = inject(APP_CONFIG);
-  private readonly usersUrl = `${this.config.apiUrl}/users`;
 
   getAll(): Observable<readonly ManagedUser[]> {
     return this.http
-      .get<readonly ApiUser[] | ApiUserList>(this.usersUrl)
+      .get<readonly ApiUser[] | ApiUserList>(apiUrl(this.config.apiUrl, API_LIST.users.list))
       .pipe(map((response) => this.userList(response).map((user) => this.toManagedUser(user))));
   }
 
   getById(id: string): Observable<ManagedUser> {
     return this.http
-      .get<ApiUser | ApiUserResponse>(`${this.usersUrl}/${id}`)
+      .get<ApiUser | ApiUserResponse>(apiUrl(this.config.apiUrl, API_LIST.users.detail(id)))
       .pipe(map((response) => this.toManagedUser(this.userResponse(response))));
   }
 
   update(id: string, request: UpdateUserRequest): Observable<ManagedUser> {
-    return this.http.put<ManagedUser>(`${this.usersUrl}/${id}`, request);
+    return this.http.put<ManagedUser>(
+      apiUrl(this.config.apiUrl, API_LIST.users.detail(id)),
+      request,
+    );
   }
 
   setActive(id: string, active: boolean): Observable<void> {
-    return this.http.put<void>(`${this.usersUrl}/${id}/status`, { active });
+    return this.http.put<void>(apiUrl(this.config.apiUrl, API_LIST.users.status(id)), { active });
   }
 
   resetPassword(id: string, request: ResetPasswordRequest): Observable<void> {
-    return this.http.post<void>(`${this.usersUrl}/${id}/reset-password`, request);
+    return this.http.post<void>(
+      apiUrl(this.config.apiUrl, API_LIST.users.resetPassword(id)),
+      request,
+    );
   }
 
   private userList(response: readonly ApiUser[] | ApiUserList): readonly ApiUser[] {

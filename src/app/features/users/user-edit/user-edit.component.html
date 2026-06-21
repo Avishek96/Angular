@@ -1,53 +1,85 @@
 <header>
   <h2>Update user</h2>
-  <a routerLink="/users">Back to users</a>
 </header>
 
 @if (loading()) {
   <p>Loading user...</p>
 } @else {
-  <form [formGroup]="form" (ngSubmit)="save()">
-    <label>
-      First name
-      <input
-        type="text"
-        autocomplete="given-name"
-        formControlName="firstName"
-        required
-      />
-    </label>
-    <label>
-      Last name
-      <input
-        type="text"
-        autocomplete="family-name"
-        formControlName="lastName"
-        required
-      />
-    </label>
-    <label>
-      Email
-      <input
-        type="email"
-        autocomplete="email"
-        formControlName="email"
-        required
-      />
-    </label>
-    <label class="check">
-      <input type="checkbox" formControlName="active" />
-      Active user
-    </label>
+  <form
+    class="card card-outline card-primary form-horizontal"
+    [formGroup]="form"
+    (ngSubmit)="save()"
+  >
+    <div class="card-header">
+      <h3 class="card-title">Profile details</h3>
+    </div>
 
-    @if (error()) {
-      <p class="error" role="alert">{{ error() }}</p>
-    }
+    <div class="card-body">
+      <div class="row mb-3">
+        <label class="col-sm-3 col-form-label" for="firstName">First name</label>
+        <div class="col-sm-9">
+          <input
+            class="form-control"
+            id="firstName"
+            type="text"
+            autocomplete="given-name"
+            formControlName="firstName"
+            required
+          />
+        </div>
+      </div>
 
-    <div class="actions">
-      <button type="submit" [disabled]="saving() || form.invalid">
+      <div class="row mb-3">
+        <label class="col-sm-3 col-form-label" for="lastName">Last name</label>
+        <div class="col-sm-9">
+          <input
+            class="form-control"
+            id="lastName"
+            type="text"
+            autocomplete="family-name"
+            formControlName="lastName"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <label class="col-sm-3 col-form-label" for="email">Email</label>
+        <div class="col-sm-9">
+          <input
+            class="form-control"
+            id="email"
+            type="email"
+            autocomplete="email"
+            formControlName="email"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="offset-sm-3 col-sm-9">
+          <div class="form-check">
+            <input class="form-check-input" id="active" type="checkbox" formControlName="active" />
+            <label class="form-check-label" for="active">Active user</label>
+          </div>
+        </div>
+      </div>
+
+      @if (error()) {
+        <div class="row mb-3">
+          <div class="offset-sm-3 col-sm-9">
+            <p class="error" role="alert">{{ error() }}</p>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="card-footer">
+      <button class="btn btn-primary" type="submit" [disabled]="saving() || form.invalid">
         {{ saving() ? 'Saving...' : 'Save changes' }}
       </button>
-      <a routerLink="/users">Cancel</a>
+      <a class="btn btn-outline-secondary" routerLink="/users">Cancel</a>
     </div>
   </form>
 }

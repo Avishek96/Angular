@@ -1,60 +1,55 @@
-section {
-  display: grid;
-  max-width: 28rem;
-  gap: 1rem;
-  width: min(28rem, 100%);
-  margin: 0;
-  padding: 2rem;
-  border: 1px solid var(--color-border);
-  border-radius: 1rem;
+.auth-card {
+  width: min(34rem, 100%);
+  border-color: var(--color-border);
+  border-radius: 0.5rem;
+  box-shadow: 0 0.125rem 0.375rem rgb(15 23 42 / 8%);
+}
+
+.card-header {
+  border-bottom-color: var(--color-border);
   background: var(--color-surface);
+}
 
-  p {
-    margin: 0;
-    color: var(--color-primary);
-    font-size: 0.75rem;
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+.card-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+  border-top-color: var(--color-border);
+  background: #f8f9fb;
+}
+
+.col-form-label {
+  font-weight: 700;
+}
+
+.form-control {
+  border-color: var(--color-border);
+  border-radius: 0.375rem;
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem var(--color-primary-soft);
+  }
+}
+
+.error {
+  margin: 0;
+  color: #b42318;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+@media (max-width: 35.9375rem) {
+  .card-footer {
+    justify-content: stretch;
   }
 
-  h1 {
-    margin: 0 0 1rem;
-    letter-spacing: -0.04em;
-  }
-
-  label {
-    display: grid;
-    gap: 0.4rem;
-    font-size: 0.8rem;
-    font-weight: 700;
-  }
-
-  form {
-    display: grid;
-    gap: 1rem;
-  }
-
-  .error {
-    color: #b42318;
-    font-size: 0.85rem;
-    font-weight: 600;
-    letter-spacing: normal;
-    text-transform: none;
-  }
-
-  .status {
-    color: var(--color-muted);
-    font-size: 0.9rem;
-    font-weight: 500;
-    letter-spacing: normal;
-    text-transform: none;
-  }
-
-  .mode-switch {
-    border: 0;
-    background: transparent;
-    color: var(--color-primary);
-    font-weight: 700;
+  .btn {
+    width: 100%;
   }
 }

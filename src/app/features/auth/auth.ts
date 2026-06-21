@@ -22,10 +22,10 @@ export class Auth implements OnInit {
       return;
     }
 
-    this.signIn();
+    void this.signIn();
   }
 
-  protected signIn(): void {
+  protected async signIn(): Promise<void> {
     if (this.loading()) {
       return;
     }
@@ -34,7 +34,7 @@ export class Auth implements OnInit {
     this.error.set('');
 
     try {
-      this.auth.login(this.route.snapshot.queryParamMap.get('returnUrl') ?? '/');
+      await this.auth.login(this.route.snapshot.queryParamMap.get('returnUrl') ?? '/');
     } catch {
       this.error.set('The sign-in request could not be started.');
       this.loading.set(false);
